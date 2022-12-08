@@ -1,5 +1,4 @@
 from deep_traffic_generation.tcvae import TCVAE
-from deep_traffic_generation.tcvae_pairs import TCVAE_Pairs
 from deep_traffic_generation.core.datasets import TrafficDataset
 
 import torch

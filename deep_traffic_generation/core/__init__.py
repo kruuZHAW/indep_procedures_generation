@@ -9,8 +9,8 @@ from pytorch_lightning.core.lightning import LightningModule
 from pytorch_lightning.loggers import TensorBoardLogger
 from sklearn.preprocessing import MinMaxScaler
 
-from .abstract import AE, VAE, VAEPairs
-from .datasets import TrafficDataset, TrafficDatasetPairs
+from .abstract import AE, VAE
+from .datasets import TrafficDataset
 from .lsr import VampPriorLSR, NormalLSR, ExemplarLSR
 from .networks import FCN, RNN, TCN
 from .utils import get_dataloaders
@@ -18,7 +18,7 @@ from .utils import get_dataloaders
 
 def cli_main(
     cls: LightningModule,
-    dataset_cls: Union[TrafficDataset, TrafficDatasetPairs],
+    dataset_cls: TrafficDataset,
     data_shape: str,
     seed: int = 42,
 ) -> None:
