@@ -11,7 +11,7 @@ check_val_every_n_epoch: 1
 data_path: !!python/object/apply:pathlib.PosixPath
 - data
 - training_datasets
-- landings_LFPO_06.pkl
+- takeoffs_LFPO_24.pkl
 default_root_dir: null
 detect_anomaly: false
 deterministic: null
@@ -22,7 +22,7 @@ early_stop: null
 enable_checkpointing: true
 enable_model_summary: true
 enable_progress_bar: true
-encoding_dim: 128
+encoding_dim: 64
 exemplar_path: null
 fast_dev_run: false
 features:
@@ -64,7 +64,7 @@ min_epochs: null
 min_steps: null
 move_metrics_to_cpu: false
 multiple_trainloader_mode: max_size_cycle
-n_components: 1000
+n_components: 800
 network_name: tcvae
 num_nodes: 1
 num_processes: null

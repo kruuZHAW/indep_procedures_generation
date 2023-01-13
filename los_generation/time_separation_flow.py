@@ -1,14 +1,15 @@
-    """ Parameterise flow of landings and trajectories with a time separation sampled within a Bernbaum-Saunders distribution
+""" Parameterise flow of landings and trajectories with a time separation sampled within a Bernbaum-Saunders distribution
     
     Arguments:
         gen_ldng_path: path to generated landings
         gen_to_path: path to generated take-offs
+        east: True if EAST configuration at LFPO. False if WEST configuration
         ref_date: reference date to start both flows of trajectories
         --bbox/--no-bbox: if the trajectories have to be cropped within the defined bounding box
 
     Returns:
         traffic object: concatenation of take-off and landing flows
-    """
+"""
 
 
 from pathlib import Path
@@ -30,7 +31,7 @@ def same_stop(f, t_ref):
     f.data.timestamp = f.data.timestamp + pd.to_timedelta(t_ref - f.stop, unit ="s")
     return f
 
-def create_delta_t(t: Traffic, dist: st.rv_continuous, ref_date: pd.Timestamp, landing: bool, bbox: bool) -> Traffic:
+def create_delta_t(t: Traffic, dist: st.rv_continuous, ref_date: pd.Timestamp, landing: bool, bbox: bool, east: bool) -> Traffic:
     
     #landings end at the same time
     if landing:
@@ -57,12 +58,17 @@ def create_delta_t(t: Traffic, dist: st.rv_continuous, ref_date: pd.Timestamp, l
         t = t.assign(flight_id = lambda df: "LDNG_" + df.flight_id)
     else:
         t = t.assign(flight_id = lambda df: "TO_" + df.flight_id)
-    t = t.resample("5s").eval(desc = "resampling 5s", max_workers = 100)
+    # t = t.resample("5s").eval(desc = "resampling 5s", max_workers = 100)
     
     if bbox:
-        # boundings of bbox based on cities: Egly, Etampes, Malesherbes, Nemours, Melun, Corbeil-Essonnes
-        lat = [48.580030,48.437099,48.293011,48.267231,48.541458, 48.6102599]
-        lon = [2.221770,2.163190,2.418050,2.695350, 2.660290, 2.474805]
+        # BBOX-EAST
+        if east : 
+            lat = [48.6102599, 48.267231, 48.267231, 48.6102599]
+            lon = [2.163190, 2.163190, 2.82, 2.82]
+        # BBOX-WEST
+        else:
+            lat = [48.70, 48.30, 48.30, 48.70]
+            lon = [2.0,2.0,2.7,2.7]
         poly = Polygon(zip(lon, lat))
         t = t.inside_bbox((poly))
         
@@ -73,19 +79,25 @@ def create_delta_t(t: Traffic, dist: st.rv_continuous, ref_date: pd.Timestamp, l
 @click.argument("gen_ldng_path", type=click.Path(exists=True))
 @click.argument("gen_to_path", type=click.Path(exists=True))
 @click.argument("ref_date", type=str)
+@click.option('--east/--west', default=True)
 @click.option('--bbox/--no-bbox', default=True)
 
 def main(
     gen_ldng_path:  Path,
     gen_to_path:  Path,
     ref_date:  str,
+    east: bool,
     bbox: bool,
 ):
 
     start_time = time.time()
 
     ref_date = pd.Timestamp(ref_date, tz = 'UTC')
-    dist = st.fatiguelife(c = 1.146240535025501, loc = 48.7344285250812, scale = 275.39162289183787) #Same distribution for takeoffs and landings
+    if east : 
+        dist = st.fatiguelife(c = 1.146240535025501, loc = 48.7344285250812, scale = 275.39162289183787) #Same distribution for takeoffs and landings
+    else :
+        dist = st.fatiguelife(c = 1.1635939736232785, loc = 52.634030248193504, scale = 251.13235704363382) #Same distribution for takeoffs and landings
+        
 
     click.echo("Loading Generated Traffics...")
     gen_to = Traffic.from_file(gen_to_path)
@@ -93,17 +105,18 @@ def main(
     click.echo("--- %s seconds ---" % (time.time() - start_time))
     
     click.echo("Calulating time difference bewtween consectuive flights for landings...")
-    gen_ldng_dt = create_delta_t(gen_ldng, dist, ref_date, True, bbox=bbox)
+    gen_ldng_dt = create_delta_t(gen_ldng, dist, ref_date, True, bbox=bbox, east=east)
     click.echo("--- %s seconds ---" % (time.time() - start_time))
     
     click.echo("Calulating time difference bewtween consectuive flights for takeoffs...")
-    gen_to_dt = create_delta_t(gen_to, dist, ref_date, False, bbox=bbox)
+    gen_to_dt = create_delta_t(gen_to, dist, ref_date, False, bbox=bbox, east=east)
     click.echo("--- %s seconds ---" % (time.time() - start_time))
     
     click.echo("Saving results...")
-    gen_traf = gen_to_dt + gen_ldng_dt
     num = len(glob.glob1(os.getcwd(),"*.parquet"))
-    gen_traf.to_parquet("traffic_MC_" + str(num) + ".parquet")
+    gen_traf = gen_to_dt + gen_ldng_dt
+    # gen_traf = gen_traf.assign(flight_id = lambda df: df.flight_id + "_MC_"+ str(num)) #Unique flight_ids over different MC traffics
+    gen_traf.to_parquet("traffic_MC" + str(num) + ".parquet")
     click.echo("--- %s seconds ---" % (time.time() - start_time))
 
 
