@@ -7,6 +7,10 @@ from tqdm.autonotebook import tqdm
 from traffic.core import Traffic
 
 #%%
+dist = st.fatiguelife(c = 1.1635939736232785, loc = 52.634030248193504, scale = 251.13235704363382)
+dist.mean()
+
+#%%
 obs_ldng = Traffic.from_file("../deep_traffic_generation/data/training_datasets/landings_LFPO_06.pkl")
 first_track = obs_ldng.data.groupby("flight_id")["track"].first()
 id_from_south = first_track[first_track > 270].index

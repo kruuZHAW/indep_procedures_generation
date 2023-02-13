@@ -11,7 +11,7 @@ from os import walk
 # %%
 dataset_ldng = TrafficDataset.from_file(
     # "../deep_traffic_generation/data/training_datasets/landings_LFPO_06.pkl",
-    "../deep_traffic_generation/data/training_datasets/landings_LFPO_25.pkl",
+    "../deep_traffic_generation/data/training_datasets/landings_south_LFPO_25.pkl",
     features=["track", "groundspeed", "altitude", "timedelta"],
     scaler=MinMaxScaler(feature_range=(-1, 1)),
     shape="image",
@@ -20,7 +20,7 @@ dataset_ldng = TrafficDataset.from_file(
 
 dataset_to = TrafficDataset.from_file(
     # "../deep_traffic_generation/data/training_datasets/takeoffs_LFPO_07.pkl",
-    "../deep_traffic_generation/data/training_datasets/takeoffs_LFPO_24.pkl",
+    "../deep_traffic_generation/data/training_datasets/takeoffs_south_proc_LFPO_24.pkl",
     features=["track", "groundspeed", "altitude", "timedelta"],
     scaler=MinMaxScaler(feature_range=(-1, 1)),
     shape="image",
@@ -32,8 +32,8 @@ dataset_to = TrafficDataset.from_file(
 # path_ldng = "../deep_traffic_generation/lightning_logs/tcvae/version_1/"
 
 #West
-path_to = "../deep_traffic_generation/lightning_logs/tcvae/version_2/"
-path_ldng = "../deep_traffic_generation/lightning_logs/tcvae/version_3/"
+path_to = "../deep_traffic_generation/lightning_logs/tcvae/version_4/"
+path_ldng = "../deep_traffic_generation/lightning_logs/tcvae/version_5/"
 
 t_to = SingleStageVAE(X=dataset_to, sim_type="generation")
 t_to.load(path_to, dataset_to.parameters)
@@ -69,8 +69,8 @@ pscales_ldng = (t_ldng.VAE.lsr.z_log_var(ph_ldng) / 2).exp()
 # j_to = 488
 # j_ldng = 273
 #WEST
-j_to = 199
-j_ldng = 398
+j_to = 233
+j_ldng = 436
 n_gen = 100
 
 dist_to = torch.distributions.Independent(
@@ -84,7 +84,7 @@ decode_to[:, 3] = 0
 traf_gen_to = g_to.build_traffic(
     decode_to,
     # coordinates=dict(latitude=48.736157, longitude = 2.45031), #East
-    coordinates=dict(latitude=48.702253, longitude = 2.274733), #West
+    coordinates=dict(latitude=48.71687, longitude = 2.308608), #West
     forward=True,
 )
 
@@ -99,7 +99,7 @@ decode_ldng[:, 3] = 0
 traf_gen_ldng = g_ldng.build_traffic(
     decode_ldng,
     # coordinates=dict(latitude=48.704496, longitude = 2.273339), #East
-    coordinates=dict(latitude=48.736221, longitude = 2.449807), #West
+    coordinates=dict(latitude=48.736236, longitude = 2.449810), #West
     forward=False,
 )
 

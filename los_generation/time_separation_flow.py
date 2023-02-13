@@ -58,7 +58,7 @@ def create_delta_t(t: Traffic, dist: st.rv_continuous, ref_date: pd.Timestamp, l
         t = t.assign(flight_id = lambda df: "LDNG_" + df.flight_id)
     else:
         t = t.assign(flight_id = lambda df: "TO_" + df.flight_id)
-    # t = t.resample("5s").eval(desc = "resampling 5s", max_workers = 100)
+    t = t.resample("5s").eval(desc = "resampling 5s", max_workers = 100)
     
     if bbox:
         # BBOX-EAST
@@ -115,8 +115,8 @@ def main(
     click.echo("Saving results...")
     num = len(glob.glob1(os.getcwd(),"*.parquet"))
     gen_traf = gen_to_dt + gen_ldng_dt
-    # gen_traf = gen_traf.assign(flight_id = lambda df: df.flight_id + "_MC_"+ str(num)) #Unique flight_ids over different MC traffics
-    gen_traf.to_parquet("traffic_MC" + str(num) + ".parquet")
+    gen_traf = gen_traf.assign(flight_id = lambda df: df.flight_id + "_MC_"+ str(num)) #Unique flight_ids over different MC traffics
+    gen_traf.to_parquet("traffic_MC_" + str(num) + ".parquet")
     click.echo("--- %s seconds ---" % (time.time() - start_time))
 
 

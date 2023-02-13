@@ -18,6 +18,8 @@ from deep_traffic_generation.VAE_Generation import SingleStageVAE
 from traffic.algorithms.generation import Generation
 from deep_traffic_generation.core.datasets import TrafficDataset
 from traffic.core import Traffic
+from shapely.geometry import LineString
+from shapely.ops import nearest_points
 
 from sklearn.preprocessing import MinMaxScaler
 import torch
@@ -106,31 +108,57 @@ def selecting_PI_07(pi:Traffic)-> Traffic:
 
 def selecting_PI_24(pi:Traffic)-> Traffic:
 
-    last_track = pi.data.groupby("flight_id")["track"].last()
-    id_to_south = last_track[(last_track > 45) & (last_track < 210)].index
-    selected_PI = pi[id_to_south]
+    # last_track = pi.data.groupby("flight_id")["track"].last()
+    # id_to_south = last_track[(last_track > 45) & (last_track < 210)].index
+    # selected_PI = pi[id_to_south]
+    
+    line = LineString([
+    (1.8, 48.4815),
+    (2.00867, 48.4815),
+    (2.0965, 48.47325),
+    (2.316, 48.4786667),
+    (2.3675277777777777, 48.4938611),
+    (2.6, 48.4938611)
+    ])
+    # Ici on garde que ce qui passe sur la ligne
+    pi_test = pi.intersects(line)
+
+    def filter_alt(flight):
+        isect = flight.linestring.intersection(line)
+        lon,lat = nearest_points(flight.linestring, isect)[0].coords.xy
+        lon = lon[0]
+        lat = lat[0]
+        if flight.data.query("abs(latitude-@lat)<1/200 & abs(longitude-@lon)<1/200").altitude.max()<10000:
+            return flight
+
+    selected_PI = pi_test.iterate_lazy().pipe(filter_alt).eval(desc='t')
 
     selected_PI = selected_PI.iterate_lazy().pipe(simple).eval(desc ="")
     selected_PI = selected_PI.query("simple")
 
-    selected_PI = selected_PI.query(
-    "flight_id not in ['TRAJ_389', 'TRAJ_42', 'TRAJ_489', 'TRAJ_415', 'TRAJ_410', 'TRAJ_544' ]"
-    )
+    # selected_PI = selected_PI.query(
+    # "flight_id not in ['TRAJ_389', 'TRAJ_42', 'TRAJ_489', 'TRAJ_415', 'TRAJ_410', 'TRAJ_544' ]"
+    # )
 
     id_PI = [int(i.split("_",1)[1]) for i in selected_PI.flight_ids]
     return id_PI
 
 def selecting_PI_25(pi:Traffic)-> Traffic:
 
-    first_track = pi.data.groupby("flight_id")["track"].first()
-    id_from_south = first_track[(first_track > 15) & (first_track < 150)].index
-    selected_PI = pi[id_from_south]
+    # first_track = pi.data.groupby("flight_id")["track"].first()
+    # id_from_south = first_track[(first_track > 15) & (first_track < 150)].index
+    # selected_PI = pi[id_from_south]
+    selected_PI = pi
 
     selected_PI = selected_PI.iterate_lazy().pipe(simple).eval(desc ="")
     selected_PI = selected_PI.query("simple")
 
+    # selected_PI = selected_PI.query(
+    # "flight_id not in ['TRAJ_84', 'TRAJ_499', 'TRAJ_483', 'TRAJ_679', 'TRAJ_89', 'TRAJ_669', 'TRAJ_83', 'TRAJ_725', 'TRAJ_678', 'TRAJ_240']"
+    # )
+    
     selected_PI = selected_PI.query(
-    "flight_id not in ['TRAJ_84', 'TRAJ_499', 'TRAJ_483', 'TRAJ_679', 'TRAJ_89', 'TRAJ_669', 'TRAJ_83', 'TRAJ_725', 'TRAJ_678', 'TRAJ_240']"
+    "flight_id not in ['TRAJ_529', 'TRAJ_307']"
     )
 
     id_PI = [int(i.split("_",1)[1]) for i in selected_PI.flight_ids]
@@ -192,7 +220,7 @@ def main(
         click.echo("Generating traffic...")
         gen_traf = generate_traffic(pseudo_means[id_PI], pseudo_scales[id_PI], t, g, lat, lon, True, n_gen)
         
-    elif dataset_path.split("/")[-1] == "takeoffs_LFPO_24.pkl":
+    elif dataset_path.split("/")[-1] == "takeoffs_south_procV4_LFPO_24.pkl":
         out_traf, pseudo_means, pseudo_scales = pseudo_inputs(t, g, lat, lon, forward = True)
         id_PI = selecting_PI_24(out_traf)
         click.echo("--- %s seconds ---" % (time.time() - start_time))
@@ -206,7 +234,7 @@ def main(
         click.echo("Generating traffic...")
         gen_traf = generate_traffic(pseudo_means[id_PI], pseudo_scales[id_PI], t, g, lat, lon, False, n_gen)
         
-    elif dataset_path.split("/")[-1] == "landings_LFPO_25.pkl":
+    elif dataset_path.split("/")[-1] == "landings_south_LFPO_25.pkl":
         out_traf, pseudo_means, pseudo_scales = pseudo_inputs(t, g, lat, lon, forward = False)
         id_PI = selecting_PI_25(out_traf)
         click.echo("--- %s seconds ---" % (time.time() - start_time))

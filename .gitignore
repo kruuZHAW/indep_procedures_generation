@@ -11,6 +11,7 @@
 *.json
 # lightning_logs/
 data/
+data_zenodo/
 # VsCode settings
 .vscode
 # Byte-compiled / optimized / DLL files

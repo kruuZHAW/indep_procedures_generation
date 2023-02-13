@@ -61,7 +61,7 @@ map_ = Map(
 
 icon1 = AwesomeIcon(
     name='plane',
-    marker_color='red',
+    marker_color='blue',
     icon_color='white',
     spin=False
 )
@@ -71,7 +71,7 @@ map_.add_layer(marker1)
 icon2 = AwesomeIcon(
     # name='ambulance',
     name='exclamation-triangle',
-    marker_color='blue',
+    marker_color='red',
     icon_color='white',
     spin=False
 )
@@ -79,7 +79,7 @@ icon2 = AwesomeIcon(
 icon3 = AwesomeIcon(
     # name='ambulance',
     name='exclamation-triangle',
-    marker_color='orange',
+    marker_color='green',
     icon_color='white',
     spin=False
 )
@@ -100,15 +100,15 @@ for l in intersect_east:
 
 polygon1 = Polygon(
     locations=[(48.70, 2.0), (48.30, 2.0), (48.30, 2.70), (48.70,2.70)],
-    color="#4c78a8",
-    fill_color="#4c78a8"
+    color="#e45756",
+    fill_color="#e45756"
 )
 map_.add_layer(polygon1)
 
 polygon2 = Polygon(
     locations=[(48.6102599, 2.163190), (48.267231, 2.163190), (48.267231,2.82), (48.6102599,2.82)],
-    color="#f58518",
-    fill_color="#f58518"
+    color="#54a24b",
+    fill_color="#54a24b"
 )
 map_.add_layer(polygon2)
 
